@@ -1,0 +1,21 @@
+{
+  "name": "local-book-my-show",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Local event discovery and ticketing platform",
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "dev:api": "pnpm --filter @localbms/api dev",
+    "dev:web": "pnpm --filter @localbms/web dev",
+    "build": "pnpm run -r build",
+    "db:generate": "pnpm --filter @localbms/api db:generate",
+    "db:migrate": "pnpm --filter @localbms/api db:migrate",
+    "db:push": "pnpm --filter @localbms/api db:push",
+    "db:seed": "pnpm --filter @localbms/api db:seed",
+    "lint": "pnpm run -r lint"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ATTENDEE
+  EVENT_MANAGER
+  ADMIN
+}
+
+enum EventCategory {
+  MUSIC
+  COMEDY
+  THEATRE
+  SPORTS
+  WORKSHOP
+  FESTIVAL
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum SeatStatus {
+  AVAILABLE
+  HELD
+  BOOKED
+  BLOCKED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         UserRole @default(ATTENDEE)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  facilities Facility[]
+  events     Event[]
+  bookings   Booking[]
+}
+
+model Facility {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  address     String
+  city        String
+  state       String?
+  pincode     String?
+  capacity    Int      @default(100)
+  amenities   String[] @default([])
+  imageUrl    String?
+  managerId   String
+  manager     User     @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  isActive    Boolean  @default(true)
+  hasSeatTemplate Boolean @default(false)
+  seatTemplateJson Json?
+  seatLayoutConfig Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shows Show[]
+  seatTemplates FacilitySeatTemplate[]
+
+  @@index([city])
+  @@index([managerId])
+}
+
+model FacilitySeatTemplate {
+  id           String   @id @default(cuid())
+  facilityId   String
+  facility     Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  ticketTypeKey String  // e.g. "VIP", "Regular" — becomes TicketType.name on show creation
+  rowLabel     String
+  seatNumber   String
+  seatCode     String
+  x            Int?
+  y            Int?
+  // Optional defaults: used to auto-create TicketTypes for new shows from this facility template
+  priceCents   Int?
+  maxPerOrder  Int?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([facilityId, seatCode])
+  @@index([facilityId])
+}
+
+model Event {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String
+  category    EventCategory
+  city        String
+  posterUrl   String?
+  durationMin Int?
+  ageLimit    String?
+  tags        String[]      @default([])
+  status      EventStatus   @default(DRAFT)
+  managerId   String
+  manager     User          @relation(fields: [managerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  shows Show[]
+
+  @@index([city, status])
+  @@index([category])
+  @@index([managerId])
+}
+
+model Show {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  facilityId   String
+  facility     Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  startsAt     DateTime
+  endsAt       DateTime?
+  doorsOpenAt  DateTime?
+  isActive     Boolean  @default(true)
+  salesStartAt DateTime @default(now())
+  salesEndAt   DateTime?
+  hasSeatMap   Boolean  @default(false)
+  seatMapJson  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ticketTypes TicketType[]
+  bookings    Booking[]
+  seats       Seat[]
+
+  @@index([eventId])
+  @@index([facilityId])
+  @@index([startsAt])
+}
+
+model TicketType {
+  id          String   @id @default(cuid())
+  showId      String
+  show        Show     @relation(fields: [showId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  priceCents  Int
+  totalQty    Int
+  soldQty     Int      @default(0)
+  heldQty     Int      @default(0)
+  maxPerOrder Int      @default(10)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookingItems BookingItem[]
+  seats        Seat[]
+
+  @@index([showId])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  bookingCode     String        @unique
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  showId          String
+  show            Show          @relation(fields: [showId], references: [id], onDelete: Cascade)
+  status          BookingStatus @default(PENDING_PAYMENT)
+  guestEmail      String
+  guestName       String
+  guestPhone      String?
+  totalCents      Int
+  holdExpiresAt   DateTime?
+  confirmedAt     DateTime?
+  checkedInAt     DateTime?
+  stripeSessionId String?       @unique
+  paymentStatus   PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items BookingItem[]
+  seats Seat[]
+
+  @@index([userId])
+  @@index([showId])
+  @@index([status])
+  @@index([guestEmail])
+  @@index([holdExpiresAt])
+}
+
+model BookingItem {
+  id           String     @id @default(cuid())
+  bookingId    String
+  booking      Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ticketTypeId String
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  quantity     Int
+  unitPriceCents Int
+
+  @@index([bookingId])
+}
+
+model Seat {
+  id           String     @id @default(cuid())
+  showId       String
+  show         Show       @relation(fields: [showId], references: [id], onDelete: Cascade)
+  ticketTypeId String
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  bookingId    String?
+  booking      Booking?   @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  rowLabel     String
+  seatNumber   String
+  seatCode     String
+  x            Int?
+  y            Int?
+  status       SeatStatus @default(AVAILABLE)
+  heldUntil    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([showId, seatCode])
+  @@index([showId, status])
+  @@index([ticketTypeId])
+  @@index([bookingId])
+}

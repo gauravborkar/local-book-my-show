@@ -11,8 +11,7 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "lint": "tsc --noEmit",
-    "postinstall": "prisma generate"
+    "lint": "tsc --noEmit"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

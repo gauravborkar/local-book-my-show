@@ -6,7 +6,7 @@ set -euo pipefail
 REPO="https://github.com/gauravborkar/local-book-my-show"
 BRANCH="main"
 ROOT="."
-BUILD="npm install -g pnpm@9.15.0 && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build"
+BUILD="npm install -g pnpm@9.15.0 && NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build"
 API_BUILD="${BUILD} && pnpm --filter @localbms/api build"
 WEB_BUILD="${BUILD} && pnpm --filter @localbms/web build"
 API_START="node apps/api/dist/server.js"

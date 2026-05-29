@@ -4,6 +4,8 @@ Use a **Render Project** to group services. Do **not** use a root `render.yaml` 
 
 Database: **Supabase** only (`DATABASE_URL` = Session pooler URL + `?sslmode=require`).
 
+**Build note:** The service may set `NODE_ENV=production`, which makes `pnpm install` skip devDependencies (`prisma`, `typescript`). Prefix install with `NODE_ENV=development` in the build command (runtime can stay `production`).
+
 ## 1. Create or pick a project
 
 Dashboard → **New** → **Project** → name e.g. `local-book-my-show`, environment `Production`.
@@ -23,7 +25,7 @@ When creating each service, choose **Project** = `local-book-my-show` and **Envi
 | Branch | `main` |
 | Root Directory | *(empty = repo root)* |
 | Runtime | Node |
-| Build Command | `npm install -g pnpm@9.15.0 && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/api build` |
+| Build Command | `npm install -g pnpm@9.15.0 && NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/api build` |
 | Start Command | `node apps/api/dist/server.js` |
 | Health Check Path | `/api/health/ready` |
 
@@ -47,7 +49,7 @@ When creating each service, choose **Project** = `local-book-my-show` and **Envi
 | Repo | same |
 | Branch | `main` |
 | Root Directory | *(empty)* |
-| Build Command | `npm install -g pnpm@9.15.0 && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/web build` |
+| Build Command | `npm install -g pnpm@9.15.0 && NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/web build` |
 | Publish Directory | `apps/web/dist` |
 
 **Environment variables:**

@@ -37,18 +37,8 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
-  - type: job
-    name: localbms-db-setup
-    runtime: node
-    plan: free
-    rootDir: .
-    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/api exec prisma generate
-    startCommand: pnpm --filter @localbms/api db:push && pnpm --filter @localbms/api db:seed
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-
-  - type: static
+  - type: web
+    runtime: static
     name: localbms-web
     rootDir: .
     buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/web build

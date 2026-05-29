@@ -131,14 +131,19 @@ Root `render.yaml` deploys:
 
 - `localbms-api` — Node API (uses your Supabase `DATABASE_URL`)
 - `localbms-web` — static frontend
-- `localbms-db-setup` — one-off job for `db:push` + `db:seed` (optional; skip if schema already applied)
 
 #### One-time setup
 
 1. Render → **New +** → **Blueprint** → connect [gauravborkar/local-book-my-show](https://github.com/gauravborkar/local-book-my-show), branch `main`, file `render.yaml`.
 2. When prompted for secret env vars, set **`DATABASE_URL`** to your Supabase Session pooler URL (same value as local `apps/api/.env`).
 3. Apply the blueprint. `FRONTEND_URL`, `CORS_ORIGINS`, and `VITE_API_URL` are wired automatically between services.
-4. After the API is live, run **`localbms-db-setup`** once only if you need schema sync or seed on Supabase (you can skip if you already ran `db:push` / `db:seed` locally against the same database).
+4. If you have not already applied schema to Supabase, run locally (same `DATABASE_URL` as Render):
+
+   ```bash
+   pnpm --filter @localbms/api db:push
+   pnpm --filter @localbms/api db:seed
+   ```
+
 5. Redeploy **localbms-web** once if the first build ran before the API URL existed.
 
 The API health endpoint is:

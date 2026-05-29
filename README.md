@@ -125,36 +125,21 @@ pnpm --filter @localbms/api db:push
 pnpm --filter @localbms/api db:seed   # optional demo data
 ```
 
-### Full stack on Render (recommended)
+### Full stack on Render (Project — recommended)
 
-Root `render.yaml` deploys:
+Deploy with a **Render Project**, not a Blueprint. Step-by-step guide:
 
-- `localbms-api` — Node API (uses your Supabase `DATABASE_URL`)
-- `localbms-web` — static frontend
+**[docs/RENDER_PROJECT.md](docs/RENDER_PROJECT.md)**
 
-#### One-time setup
+Summary:
 
-1. Render → **New +** → **Blueprint** → connect [gauravborkar/local-book-my-show](https://github.com/gauravborkar/local-book-my-show), branch `main`, file `render.yaml`.
-2. When prompted for secret env vars, set **`DATABASE_URL`** to your Supabase Session pooler URL (same value as local `apps/api/.env`).
-3. Apply the blueprint. `FRONTEND_URL`, `CORS_ORIGINS`, and `VITE_API_URL` are wired automatically between services.
-4. If you have not already applied schema to Supabase, run locally (same `DATABASE_URL` as Render):
+- **Database:** Supabase (`DATABASE_URL` on the API service only)
+- **API:** Web Service `localbms-api` — build/start commands in the doc above
+- **Web:** Static Site `localbms-web` — `VITE_API_URL` → API URL
 
-   ```bash
-   pnpm --filter @localbms/api db:push
-   pnpm --filter @localbms/api db:seed
-   ```
+Optional CLI: `scripts/render-deploy.sh` (requires `render login` and `RENDER_ENVIRONMENT_ID`).
 
-5. Redeploy **localbms-web** once if the first build ran before the API URL existed.
-
-The API health endpoint is:
-
-```bash
-/api/health/ready
-```
-
-### API-only on Render
-
-If you only want backend on Render, you can still use `apps/api/render.yaml`.
+Health check: `/api/health/ready`
 
 ### API on Vercel
 

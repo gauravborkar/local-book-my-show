@@ -110,42 +110,36 @@ pnpm dev
 
 ## Deployment
 
-### Database
+### Database (Supabase)
 
-Use [Neon](https://neon.tech), [Supabase](https://supabase.com), or Render PostgreSQL. Run migrations:
+This project uses **[Supabase](https://supabase.com) PostgreSQL** (not a database hosted on Render).
+
+1. In Supabase → **Project Settings** → **Database**, copy the **Session pooler** connection string (IPv4-friendly).
+2. Append `?sslmode=require` if it is not already in the URL.
+3. Set `DATABASE_URL` in `apps/api/.env` for local dev and in Render for production (see below).
+
+Apply schema locally:
 
 ```bash
-cd apps/api && npx prisma migrate deploy
+pnpm --filter @localbms/api db:push
+pnpm --filter @localbms/api db:seed   # optional demo data
 ```
 
 ### Full stack on Render (recommended)
 
-This repo includes a root Render Blueprint at `render.yaml` that provisions:
+Root `render.yaml` deploys:
 
-- `localbms-postgres` (Render Postgres)
-- `localbms-api` (Node web service)
-- `localbms-web` (static site)
+- `localbms-api` — Node API (uses your Supabase `DATABASE_URL`)
+- `localbms-web` — static frontend
+- `localbms-db-setup` — one-off job for `db:push` + `db:seed` (optional; skip if schema already applied)
 
 #### One-time setup
 
-1. In Render, click **New +** → **Blueprint**.
-2. Connect this repo and select the root `render.yaml`.
-3. After creation:
-   - Open **localbms-api** env vars and set:
-     - `FRONTEND_URL` = your web service URL (for example `https://localbms-web.onrender.com`)
-     - `CORS_ORIGINS` = same URL (or comma-separated list)
-   - Open **localbms-web** env vars and set:
-     - `VITE_API_URL` = your API URL (for example `https://localbms-api.onrender.com`)
-4. Redeploy both services after env var changes.
-
-#### Database schema + seed on Render
-
-Run once after deploy from your local machine (pointing to Render DB URL), or via Render shell:
-
-```bash
-pnpm --filter @localbms/api db:push
-pnpm --filter @localbms/api db:seed
-```
+1. Render → **New +** → **Blueprint** → connect [gauravborkar/local-book-my-show](https://github.com/gauravborkar/local-book-my-show), branch `main`, file `render.yaml`.
+2. When prompted for secret env vars, set **`DATABASE_URL`** to your Supabase Session pooler URL (same value as local `apps/api/.env`).
+3. Apply the blueprint. `FRONTEND_URL`, `CORS_ORIGINS`, and `VITE_API_URL` are wired automatically between services.
+4. After the API is live, run **`localbms-db-setup`** once only if you need schema sync or seed on Supabase (you can skip if you already ran `db:push` / `db:seed` locally against the same database).
+5. Redeploy **localbms-web** once if the first build ran before the API URL existed.
 
 The API health endpoint is:
 

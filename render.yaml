@@ -7,8 +7,8 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/api build
-    startCommand: pnpm --filter @localbms/api start
+    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/api build
+    startCommand: node apps/api/dist/server.js
     healthCheckPath: /api/health/ready
     autoDeploy: true
     envVars:
@@ -41,7 +41,7 @@ services:
     runtime: static
     name: localbms-web
     rootDir: .
-    buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/web build
+    buildCommand: npm install -g pnpm@9.15.0 && pnpm install --no-frozen-lockfile && pnpm --filter @localbms/shared build && pnpm --filter @localbms/web build
     staticPublishPath: apps/web/dist
     pullRequestPreviewsEnabled: true
     envVars:
